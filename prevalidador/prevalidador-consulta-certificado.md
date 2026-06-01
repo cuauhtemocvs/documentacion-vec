@@ -23,7 +23,7 @@ La inspección se localiza por **`solicitud_id`**: documento en `inspecciones` d
 | Parámetro | Ubicación | Requerido | Descripción |
 |---|---|---|---|
 | `solicitud_id` | query (GET) o body JSON (POST) | Sí | ID del documento en `solicitudesInspeccion` |
-| `timezone` | query o body JSON | No | Zona horaria **IANA** del cliente (p. ej. `America/Tijuana`). Por defecto: `America/Mexico_City`. La fecha del encabezado usa el mismo formato que el reporte web (`AAAA-MM-DD HH:mm (UTC±HH)`) en esa zona. |
+| `timezone` | query o body JSON | No | Zona horaria **IANA** del cliente (p. ej. `America/Tijuana`). Por defecto: `America/Mexico_City`. Afecta `encabezado.fecha` (ISO 8601 con offset en esa zona). |
 
 Alias aceptados: `solicitudId`.
 
@@ -62,8 +62,7 @@ curl -s -X POST \
     "datosGeneralesYVehiculares": { },
     "resultadoVerificacion": null,
     "fotografias": { },
-    "ubicacion": { },
-    "leyenda": { }
+    "ubicacion": { }
   }
 }
 ```
@@ -72,16 +71,17 @@ curl -s -X POST \
 
 | Sección | Contenido (equivalente al HTML) |
 |---|---|
-| `encabezado` | Folio, VEC LLC, patente, aduana, fecha, equipo BlueDriver, MAC, URLs y texto QR de datos |
+| `encabezado` | Folio, VEC LLC, patente, aduana, `fecha` (ISO 8601, p. ej. `2026-05-29T14:19:00-06:00`), equipo BlueDriver, MAC, URLs y texto QR de datos |
 | `datosGeneralesYVehiculares` | Propietario, país, marca, VIN, año, modelo, odómetro CarInfo |
-| `resultadoVerificacion` | `null` si emisiones no están `finalizado`; si no, monitores en dos columnas + resultado final |
-| `fotografias` | `fotos` y `fotosVin`: arrays de **URLs**; resumen IA, odómetro en tablero |
+| `resultadoVerificacion` | `null` si emisiones no están `finalizado`; si no, `monitores[]` + `resultadoFinal` |
+| `fotografias` | `fotos` y `fotosVin`: arrays de `{ posicion, url_imagen }`; resumen IA, odómetro en tablero |
 | `ubicacion` | Lat/long formateadas (4 decimales) y `mapaEstaticoUrl` (Google Static Maps, mismas dimensiones que el reporte) |
-| `leyenda` | Textos SEMARNAT / EPA / sitio |
+
+<!-- `leyenda` (SEMARNAT / EPA / sitio) deshabilitada temporalmente en la API. -->
 
 No se incluyen imágenes QR en base64 (solo `urlReportePublico` y `textoQrDatosInspeccion` para generarlas externamente).
 
-La respuesta incluye `zona_horaria` con la zona IANA aplicada al campo `encabezado.fecha`.
+La respuesta incluye `zona_horaria` con la zona IANA usada para interpretar `encabezado.fecha`.
 
 ---
 
@@ -96,19 +96,3 @@ La respuesta incluye `zona_horaria` con la zona IANA aplicada al campo `encabeza
 | 409 | `inspeccion-ambigua` | Más de una inspección para la misma solicitud |
 | 405 | `METHOD_NOT_ALLOWED` | No es GET ni POST |
 | 500 | `INTERNAL_ERROR` | Error no controlado |
-
----
-
-## Índice Firestore
-
-Consulta:
-
-`inspecciones` WHERE `datosAsignacion.solicitudInspeccionId` == `solicitud_id`
-
-Índice en `firestore.indexes.json` (campo único en colección `inspecciones`).
-
----
-
-## Candado 1:1
-
-Al crear asignación + inspección (`AsignacionesService.crearAsignacionEInspeccion`), se valida que no exista otra inspección con el mismo `solicitudInspeccionId`.

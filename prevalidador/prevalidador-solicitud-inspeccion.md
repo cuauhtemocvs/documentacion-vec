@@ -163,19 +163,3 @@ sequenceDiagram
   API->>Crear: POST body + Bearer
   Crear-->>API: solicitud.id (201)
 ```
-
----
-
-## Despliegue
-
-```bash
-firebase deploy --only functions:prevalidadorSolicitudInspeccion
-```
-
----
-
-## Ver también
-
-- [prevalidador-auth.md](./prevalidador-auth.md)
-- [prevalidador-lista-clientes.md](./prevalidador-lista-clientes.md)
-- [README.md](./README.md)

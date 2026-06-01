@@ -183,35 +183,3 @@ Formato de error:
   "message": "Token inválido o expirado."
 }
 ```
-
----
-
-## Implementación interna
-
-| Pieza | Ubicación |
-|---|---|
-| HTTP handler | `functions/src/modules/prevalidadorListaClientes.ts` |
-| Listado y filtro | `functions/src/lib/prevalidadorClientes.ts` |
-| Vigencia de contrato | `functions/src/lib/contratoVigencia.ts` |
-| Validación de token | `functions/src/lib/prevalidadorAuth.ts` → `verifyPrevalidadorBearerToken` |
-
----
-
-## Despliegue
-
-```bash
-firebase deploy --only functions:prevalidadorListaClientes
-```
-
-Desplegar también `prevalidadorLogin` si aún no está en el proyecto:
-
-```bash
-firebase deploy --only functions:prevalidadorLogin,functions:prevalidadorListaClientes
-```
-
----
-
-## Ver también
-
-- [Autenticación de prevalidadores](./prevalidador-auth.md) — login, token y APIs relacionadas
-- [Índice de documentación](./README.md)
