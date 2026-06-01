@@ -1,6 +1,6 @@
 # API `prevalidadorListaClientes`
 
-Lista los **clientes** que un prevalidador puede usar al registrar solicitudes de inspección. Misma lógica y mismos campos que el select **Cliente** del modal de solicitud en el panel VEC.
+Lista los **clientes** que su prevalidador puede usar al registrar solicitudes de inspección en **VEC**. Mismos criterios que el listado de clientes en el panel VEC al crear una solicitud.
 
 **Requisito previo:** token obtenido con [`prevalidadorLogin`](./prevalidador-auth.md#1-login--prevalidadorlogin).
 
@@ -10,7 +10,7 @@ Lista los **clientes** que un prevalidador puede usar al registrar solicitudes d
 
 | | |
 |---|---|
-| **Function** | `prevalidadorListaClientes` |
+| **API** | `prevalidadorListaClientes` |
 | **Método** | `GET` |
 | **URL (prod)** | `https://us-central1-vec-v2.cloudfunctions.net/prevalidadorListaClientes` |
 | **Región** | `us-central1` |
@@ -42,14 +42,12 @@ sequenceDiagram
 
 ## Criterio de inclusión
 
-Un cliente entra en la lista si, en Firestore (`clientes/{id}`), existe **al menos un contrato** que cumpla **ambas** condiciones:
+Un cliente aparece si en **VEC** tiene **al menos un contrato** que cumpla **ambas** condiciones:
 
-| Condición | Campo |
+| Condición | Descripción |
 |---|---|
-| Prevalidador asignado | `contratos[].prevalidador.id === uid` del token |
-| Vigencia actual | Fecha de hoy ∈ `[vigencia.inicio, vigencia.fin]` (día calendario, `YYYY-MM-DD`) |
-
-Equivale a `ModalSolicitudInspeccionComponent.cargarClientesPorPrevalidador` en el front Angular.
+| Prevalidador asignado | El contrato está asociado al mismo prevalidador que el token de sesión |
+| Vigencia actual | La fecha de hoy está dentro del periodo de vigencia del contrato (`YYYY-MM-DD`) |
 
 **No se incluyen:**
 
@@ -124,7 +122,7 @@ console.log(data.clientes);
 
 | Campo | Tipo | Descripción |
 |---|---|---|
-| `id` | string | ID del documento en `clientes/{id}` |
+| `id` | string | Identificador del cliente en VEC (`cliente_id` para otras APIs) |
 | `nombre` | string | Razón social / nombre del cliente |
 | `alias` | string | Nombre corto en el panel |
 | `numeroPatente` | string | Número de patente del cliente |
@@ -170,9 +168,9 @@ No es error HTTP; el integrador debe manejar el caso (equivalente al mensaje *"N
 |---|---|---|
 | 401 | `missing-token` | Falta header `Authorization` o no es `Bearer …` |
 | 401 | `invalid-token` | Token inválido o expirado → renovar con `prevalidadorLogin` |
-| 403 | `not-prevalidador` / `prevalidador-inactivo` | Usuario Auth válido pero no es prevalidador activo en Firestore |
+| 403 | `not-prevalidador` / `prevalidador-inactivo` | Cuenta no habilitada como prevalidador activo en VEC |
 | 405 | `METHOD_NOT_ALLOWED` | No es `GET` |
-| 500 | `INTERNAL_ERROR` | Fallo interno al consultar Firestore |
+| 500 | `INTERNAL_ERROR` | Fallo interno en VEC |
 
 Formato de error:
 

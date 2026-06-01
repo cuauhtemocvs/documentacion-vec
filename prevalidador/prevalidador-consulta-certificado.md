@@ -1,10 +1,69 @@
 # API `prevalidadorConsultaCertificado`
 
-Devuelve el **certificado de inspección** en JSON, con las mismas secciones que el reporte público [`/reporte/:inspeccionId`](../../src/app/public/reporte/).
+Devuelve el **certificado de inspección** en JSON, con las mismas secciones que el reporte público de VEC: `https://smog.emissions.mx/reporte/{inspeccion_id}`.
 
-La inspección se localiza por **`solicitud_id`**: documento en `inspecciones` donde `datosAsignacion.solicitudInspeccionId` coincide (relación 1:1 con la solicitud).
+La inspección se localiza por **`solicitud_id`** (el ID devuelto al crear la solicitud). En VEC existe una relación **1:1** entre esa solicitud y la inspección ejecutada.
 
-**Requisitos previos:** [`prevalidadorLogin`](./prevalidador-auth.md) y una solicitud creada por el prevalidador (p. ej. [`prevalidadorSolicitudInspeccion`](./prevalidador-solicitud-inspeccion.md)) que ya tenga inspección asignada.
+**Requisitos previos:** [`prevalidadorLogin`](./prevalidador-auth.md), [`prevalidadorListaClientes`](./prevalidador-lista-clientes.md) y [`prevalidadorSolicitudInspeccion`](./prevalidador-solicitud-inspeccion.md). El certificado solo está disponible cuando la solicitud ya tiene **inspección vinculada** (paso operativo en VEC, fuera de estas APIs).
+
+---
+
+## Flujo integrador (paso final)
+
+Esta API cierra el ciclo server-to-server del prevalidador: recibes el JSON del certificado a partir del **`solicitud_id`** que obtuviste al crear la solicitud.
+
+```mermaid
+sequenceDiagram
+  participant API as Integrador
+  participant Login as prevalidadorLogin
+  participant Clientes as prevalidadorListaClientes
+  participant Solicitud as prevalidadorSolicitudInspeccion
+  participant VEC as Panel VEC / app inspección
+  participant Cert as prevalidadorConsultaCertificado
+  participant VECAdmin as VEC (admin)
+
+  API->>Login: POST credenciales
+  Login-->>API: idToken
+  API->>Clientes: GET Bearer
+  Clientes-->>API: clientes[].id
+  API->>Solicitud: POST body + Bearer
+  Solicitud->>VECAdmin: alta solicitud (estatus pendiente)
+  Solicitud-->>API: solicitud.id
+  Note over API,VEC: Guardar solicitud.id en tu sistema
+  VEC->>VECAdmin: asignación crédito + inspección (1:1)
+  VEC->>VECAdmin: inspección ejecutada (fotos, emisiones, ubicación…)
+  API->>Cert: GET/POST solicitud_id + Bearer
+  Cert->>VECAdmin: validar y leer certificado
+  Cert-->>API: certificado (JSON)
+```
+
+### Orden de pasos
+
+| Paso | Quién | Qué ocurre | Salida útil |
+|---|---|---|---|
+| 1 | Integrador | `prevalidadorLogin` | `idToken` |
+| 2 | Integrador | `prevalidadorListaClientes` | `cliente_id` para la solicitud |
+| 3 | Integrador | `prevalidadorSolicitudInspeccion` | **`solicitud_id`** (guardar en tu BD) |
+| 4 | Operación VEC | En panel web o app móvil VEC: asignar crédito y realizar la inspección | Inspección vinculada a su `solicitud_id` |
+| 5 | Integrador | **`prevalidadorConsultaCertificado`** con ese `solicitud_id` | `certificado` + `inspeccion_id` |
+
+### Cuándo llamar al certificado
+
+- **Sí:** la inspección ya existe y está vinculada a la solicitud (relación 1:1).
+- **No (404 `certificado-no-disponible`):** la solicitud sigue en `pendiente` sin asignación, o la inspección aún no existe en VEC.
+- **Recomendado:** consultar cuando el integrador sabe que la inspección terminó (p. ej. webhook interno, polling de estatus en tu sistema, o notificación del panel VEC). Si `resultadoVerificacion` es `null`, las emisiones BlueDriver aún no están en `finalizado`; el resto del certificado puede traer fotos y datos generales.
+
+### Relación solicitud ↔ inspección
+
+```
+solicitud_id (la guardó al crear la solicitud)
+        │
+        │  asignación e inspección en VEC (panel / app)
+        ▼
+inspeccion_id (lo devuelve esta API en la respuesta)
+```
+
+No envíe `inspeccion_id` en el request; VEC lo resuelve a partir de `solicitud_id` y valida que la solicitud sea de su prevalidador.
 
 ---
 
@@ -22,7 +81,7 @@ La inspección se localiza por **`solicitud_id`**: documento en `inspecciones` d
 
 | Parámetro | Ubicación | Requerido | Descripción |
 |---|---|---|---|
-| `solicitud_id` | query (GET) o body JSON (POST) | Sí | ID del documento en `solicitudesInspeccion` |
+| `solicitud_id` | query (GET) o body JSON (POST) | Sí | ID de la solicitud de inspección en VEC (respuesta del paso 3) |
 | `timezone` | query o body JSON | No | Zona horaria **IANA** del cliente (p. ej. `America/Tijuana`). Por defecto: `America/Mexico_City`. Afecta `encabezado.fecha` (ISO 8601 con offset en esa zona). |
 
 Alias aceptados: `solicitudId`.

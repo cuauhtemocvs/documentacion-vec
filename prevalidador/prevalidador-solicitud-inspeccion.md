@@ -108,14 +108,14 @@ curl -s -X POST \
 
 | Campo | Valor |
 |---|---|
-| `createdAt` | `serverTimestamp()` en Firestore |
+| `createdAt` | Fecha/hora de creación en VEC (servidor) |
 | `createdBy` | Prevalidador del token (`tipo: "prevalidador"`) |
-| `modifiedAt` | `null` hasta la primera edición en el panel |
-| `modifiedBy` | `null` hasta una persona edite en el panel |
+| `modifiedAt` | `null` hasta la primera edición en el panel VEC |
+| `modifiedBy` | `null` hasta que un usuario del panel VEC edite la solicitud |
 
-`fechaRegistro` también se escribe con el mismo timestamp (compatibilidad con el listado del panel).
+`fechaRegistro` refleja la misma fecha de alta (visible en el panel VEC).
 
-Detalle del modelo: [solicitudes-inspeccion.md](./solicitudes-inspeccion.md).
+**Siguiente paso (cuando la inspección esté hecha en VEC):** [prevalidadorConsultaCertificado](./prevalidador-consulta-certificado.md) con el mismo `solicitud.id`.
 
 ---
 
@@ -162,4 +162,7 @@ sequenceDiagram
   Clientes-->>API: clientes[].id
   API->>Crear: POST body + Bearer
   Crear-->>API: solicitud.id (201)
+  Note over API: Después: operación VEC + consulta certificado
 ```
+
+Ver flujo completo: [README.md](./README.md) y [prevalidador-consulta-certificado.md](./prevalidador-consulta-certificado.md).

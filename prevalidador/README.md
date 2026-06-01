@@ -1,45 +1,52 @@
-# Sincronizacion de documentacion (prevalidador)
+# Integración API — Prevalidadores ↔ VEC
 
-Este folder incluye el script `sync-docs.ps1` para copiar la documentacion de APIs de `prevalidador` al repo publico de documentacion.
+Documentación para **equipos de sistemas de prevalidadores** que consumen las APIs HTTP de **VEC** (integración server-to-server). No incluye despliegue, configuración de servidores VEC ni acceso directo a la base de datos de VEC.
 
-## Estructura esperada
+**Base URL (producción):** `https://us-central1-vec-v2.cloudfunctions.net`
 
-Para que funcione sin parametros, ambos repos deben estar como carpetas hermanas:
+---
 
-- `...\vec-v2`
-- `...\documentacion-vec`
+## APIs disponibles
 
-Ejemplo:
+| Orden | API | Documento |
+|---|---|---|
+| 1 | `prevalidadorLogin` | [Autenticación y guía general](./prevalidador-auth.md) |
+| 2 | `prevalidadorListaClientes` | [Lista de clientes](./prevalidador-lista-clientes.md) |
+| 3 | `prevalidadorSolicitudInspeccion` | [Crear solicitud de inspección](./prevalidador-solicitud-inspeccion.md) |
+| 4 | `prevalidadorConsultaCertificado` | [Consultar certificado](./prevalidador-consulta-certificado.md) |
 
-- `C:\dev\VEC-V2-Integrado\vec-v2`
-- `C:\dev\VEC-V2-Integrado\documentacion-vec`
+---
 
-## Que hace el script
+## Flujo completo recomendado
 
-- Toma todos los archivos `*.md` de `functions/docs/prevalidador`.
-- Los copia a `documentacion-vec/prevalidador`.
-- Si la carpeta destino no existe, la crea.
-- Sobrescribe archivos existentes para mantenerlos sincronizados.
+```mermaid
+sequenceDiagram
+  participant Usted as Su servidor
+  participant VEC as APIs VEC
+  participant Ops as Operación VEC
 
-## Como ejecutarlo
-
-Desde la raiz de `vec-v2`, correr:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File ".\functions\docs\prevalidador\sync-docs.ps1"
+  Usted->>VEC: 1. Login (email/password)
+  VEC-->>Usted: idToken
+  Usted->>VEC: 2. Lista clientes
+  VEC-->>Usted: cliente_id
+  Usted->>VEC: 3. Crear solicitud
+  VEC-->>Usted: solicitud_id
+  Note over Usted: Guardar solicitud_id
+  Ops->>Ops: 4. Asignación e inspección (panel / app VEC)
+  Usted->>VEC: 5. Consultar certificado (solicitud_id)
+  VEC-->>Usted: certificado JSON
 ```
 
-## Validacion rapida
+1. Obtener `idToken` con credenciales que **VEC** entregó a su organización.
+2. Listar clientes con contrato vigente y elegir `cliente_id`.
+3. Crear la solicitud de inspección; **guardar `solicitud.id`** en su sistema.
+4. Esperar a que VEC asigne crédito y se ejecute la inspección (fuera de estas APIs).
+5. Consultar el certificado con el mismo `solicitud_id`.
 
-Al terminar, deberias ver mensajes como:
+Detalle de autenticación, renovación de token y alcance de datos: [prevalidador-auth.md](./prevalidador-auth.md).
 
-- `Sincronizado: <archivo>.md`
-- `Listo. Documentacion sincronizada en: <ruta-destino>`
+---
 
-## Uso opcional con ruta manual
+## Soporte
 
-Si alguien no tiene la estructura de carpetas esperada, puede indicar la ruta destino explicitamente:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File ".\functions\docs\prevalidador\sync-docs.ps1" -DestinationRepo "D:\repos\documentacion-vec"
-```
+Ante credenciales, altas de prevalidador o incidencias operativas (asignación, inspección), contactar al equipo **VEC** que administra su cuenta.

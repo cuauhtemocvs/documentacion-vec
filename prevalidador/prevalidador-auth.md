@@ -1,33 +1,41 @@
-# Autenticación de Prevalidadores (integraciones server-to-server)
+# Autenticación de prevalidadores (integración con VEC)
 
-Integración pensada para **servicios backend** que consumen Cloud Functions HTTP (`onRequest`). No hay acceso directo a Firestore desde el cliente del prevalidador: todo pasa por APIs con token.
+Guía para **servicios backend** de organizaciones prevalidadoras que consumen las **APIs HTTP de VEC**. No hay acceso directo a la base de datos de VEC: todo el intercambio de datos ocurre mediante estas APIs y un token de sesión.
+
+Índice general: [README.md](./README.md).
+
+---
 
 ## Alcance de datos
 
-| Colección | Acceso |
-|---|---|
-| `prevalidadores/{uid}` | Solo el propio registro (`uid` del token) |
-| `solicitudesInspeccion` | Solo donde `prevalidador.id === uid` |
-| `inspecciones` | Donde `prevalidador.id === uid` **o** la solicitud ligada pertenece al prevalidador |
+VEC solo devuelve información asociada al prevalidador autenticado (identificado por el token):
 
-Cualquier otra colección queda **fuera de alcance**.
+| Recurso | Qué puede ver el prevalidador |
+|---|---|
+| Su cuenta de prevalidador | Datos propios del usuario de integración |
+| Solicitudes de inspección | Las que él registró o que están a su nombre |
+| Inspecciones / certificados | Las vinculadas a sus solicitudes (o asignadas explícitamente a él) |
+
+Cualquier otro dato del ecosistema VEC queda **fuera de alcance**.
+
+---
 
 ## Resumen del flujo
 
 ```mermaid
 sequenceDiagram
-  participant Servidor as Servidor integrador
+  participant Integrador as Servidor integrador
   participant Login as prevalidadorLogin
-  participant API as API onRequest
-  participant FS as Firestore Admin
+  participant API as API VEC
+  participant VEC as VEC (admin)
 
-  Servidor->>Login: POST email + password
-  Login-->>Servidor: idToken + expiresIn
-  Servidor->>API: Authorization Bearer idToken
-  API->>API: verifyIdToken
-  API->>FS: prevalidador activo + recurso asociado
-  API-->>Servidor: datos filtrados
-  Note over Servidor,Login: Si idToken expira, repetir prevalidadorLogin
+  Integrador->>Login: POST email + password
+  Login-->>Integrador: idToken + expiresIn
+  Integrador->>API: Authorization Bearer idToken
+  API->>VEC: validar prevalidador y recurso
+  VEC-->>API: datos permitidos
+  API-->>Integrador: respuesta JSON
+  Note over Integrador,Login: Si el token expira, repetir login
 ```
 
 ---
@@ -41,7 +49,6 @@ sequenceDiagram
 | **Método** | `POST` |
 | **URL (prod)** | `https://us-central1-vec-v2.cloudfunctions.net/prevalidadorLogin` |
 | **Content-Type** | `application/json` |
-| **CORS** | Cualquier origen (`Access-Control-Allow-Origin: *`) |
 
 ### Request
 
@@ -51,6 +58,8 @@ sequenceDiagram
   "password": "su-contraseña"
 }
 ```
+
+Las credenciales las proporciona **VEC** al dar de alta la integración.
 
 ### Response exitosa (200)
 
@@ -70,10 +79,10 @@ sequenceDiagram
 
 | Campo | Uso |
 |---|---|
-| `idToken` | JWT de Firebase Auth. Enviar en APIs posteriores: `Authorization: Bearer …`. Expira en ~1 h (`expiresIn` segundos). |
+| `idToken` | Token de sesión. Enviar en APIs posteriores: `Authorization: Bearer …`. Suele expirar en ~1 h (`expiresIn` en segundos). |
 | `expiresIn` | Segundos de validez (típicamente `"3600"`). |
 
-> **No se devuelve `refreshToken`.** La Web API Key de Firebase queda solo en el servidor (Cloud Functions). El integrador renueva sesión volviendo a llamar `prevalidadorLogin` con las mismas credenciales.
+> **No se devuelve refresh token.** Renueve sesión volviendo a llamar `prevalidadorLogin` con las mismas credenciales.
 
 ### Errores
 
@@ -81,7 +90,7 @@ sequenceDiagram
 |---|---|---|
 | 400 | `VALIDATION_ERROR` | Email o password faltante/inválido |
 | 401 | `invalid-credentials` | Email o contraseña incorrectos |
-| 403 | `not-prevalidador` / `prevalidador-inactivo` | No es prevalidador activo |
+| 403 | `not-prevalidador` / `prevalidador-inactivo` | Cuenta no habilitada como prevalidador activo en VEC |
 | 405 | `METHOD_NOT_ALLOWED` | No es POST |
 | 500 | `INTERNAL_ERROR` | Fallo interno |
 
@@ -89,26 +98,34 @@ sequenceDiagram
 
 ## 2. Listar clientes — `prevalidadorListaClientes`
 
-Documentación completa: **[prevalidador-lista-clientes.md](./prevalidador-lista-clientes.md)**
+Documentación: **[prevalidador-lista-clientes.md](./prevalidador-lista-clientes.md)**
 
-Resumen: `GET` con `Authorization: Bearer <idToken>`. Devuelve clientes con contrato vigente asociados al prevalidador del token (mismo criterio que el select **Cliente** del modal de solicitud). Índice de docs: [README.md](./README.md).
+`GET` con `Authorization: Bearer <idToken>`. Devuelve clientes con contrato vigente asociados al prevalidador del token.
 
 ---
 
 ## 3. Crear solicitud — `prevalidadorSolicitudInspeccion`
 
-Documentación completa: **[prevalidador-solicitud-inspeccion.md](./prevalidador-solicitud-inspeccion.md)**
+Documentación: **[prevalidador-solicitud-inspeccion.md](./prevalidador-solicitud-inspeccion.md)**
 
-Resumen: `POST` con `cliente_id`, `vin`, `fabricante`, `modelo`, `pais`, `anio_modelo`, `nombre_propietario`. Prevalidador y estatus `pendiente` se asignan en servidor.
+`POST` con datos del vehículo y `cliente_id`. El prevalidador y el estatus inicial `pendiente` los asigna VEC en servidor. **Guarde el `solicitud.id` de la respuesta.**
 
 ---
 
-## 4. Renovar sesión (sin endpoint extra)
+## 4. Consultar certificado — `prevalidadorConsultaCertificado`
+
+Documentación: **[prevalidador-consulta-certificado.md](./prevalidador-consulta-certificado.md)**
+
+`GET` o `POST` con `solicitud_id` (el mismo ID del paso 3), después de que VEC haya asignado la inspección y esta se haya ejecutado. Devuelve el certificado en JSON.
+
+---
+
+## 5. Renovar sesión
 
 Cuando una API responda `401` con `"Token inválido o expirado."`:
 
-1. Volver a llamar `prevalidadorLogin` con email y password (credenciales en el servidor integrador, nunca en el navegador del usuario final si aplica).
-2. Guardar el nuevo `idToken` y `expiresIn`.
+1. Llamar de nuevo `prevalidadorLogin`.
+2. Guardar el nuevo `idToken`.
 3. Reintentar la petición fallida.
 
 Ejemplo (pseudo-código):
@@ -129,191 +146,73 @@ async function obtenerIdToken(): Promise<string> {
 }
 ```
 
-Opcional: cachear el token en memoria y renovarlo unos minutos antes de `expiresIn`.
+Opcional: cachear el token y renovarlo antes de que venza `expiresIn`.
 
 ---
 
-## 5. Usar el token en APIs `onRequest`
-
-Header obligatorio en cada request:
+## 6. Header en todas las APIs
 
 ```http
 Authorization: Bearer eyJhbGciOiJSUzI1NiIs...
 Content-Type: application/json
 ```
 
-Ejemplo curl:
+Ejemplo:
 
 ```bash
-curl -X POST "https://us-central1-vec-v2.cloudfunctions.net/miApiPrevalidador" \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer ${ID_TOKEN}" \
-  -d '{"solicitudInspeccionId": "abc123"}'
+curl -s -X GET \
+  "https://us-central1-vec-v2.cloudfunctions.net/prevalidadorListaClientes" \
+  -H "Authorization: Bearer ${ID_TOKEN}"
 ```
 
 ---
 
-## 6. Implementar una API con restricción por asociación
+## 7. Modelo de asociación (referencia)
 
-Helpers en `functions/src/lib/prevalidadorAuth.ts`:
-
-| Función | Uso |
-|---|---|
-| `verifyPrevalidadorBearerToken(authHeader)` | Valida JWT + prevalidador activo |
-| `assertSolicitudInspeccionBelongsToPrevalidador(id, uid)` | Solicitud del prevalidador |
-| `assertInspeccionBelongsToPrevalidador(id, uid)` | Inspección del prevalidador (directo o vía solicitud) |
-| `resolveInspeccionPrevalidadorId(data)` | Resuelve el uid dueño desde el documento de inspección |
-| `sendPrevalidadorAuthError(res, error)` | Respuesta JSON de error estándar |
-
-### Ejemplo: consultar una solicitud
-
-```typescript
-import {onRequest} from "firebase-functions/v2/https";
-import cors from "cors";
-import {
-  assertSolicitudInspeccionBelongsToPrevalidador,
-  sendPrevalidadorAuthError,
-  verifyPrevalidadorBearerToken,
-} from "../lib/prevalidadorAuth";
-
-const corsHandler = cors({origin: true});
-
-export const prevalidadorGetSolicitud = onRequest(
-  {region: "us-central1"},
-  async (req, res) => {
-    await corsHandler(req, res, async () => {
-      try {
-        const {uid} = await verifyPrevalidadorBearerToken(
-          req.headers.authorization
-        );
-        const solicitudId = String(req.query.id ?? req.body?.id ?? "").trim();
-        if (!solicitudId) {
-          res.status(400).json({
-            success: false,
-            error: "VALIDATION_ERROR",
-            message: "id es requerido.",
-          });
-          return;
-        }
-
-        const data = await assertSolicitudInspeccionBelongsToPrevalidador(
-          solicitudId,
-          uid
-        );
-
-        res.json({success: true, solicitud: {id: solicitudId, ...data}});
-      } catch (error) {
-        if (sendPrevalidadorAuthError(res, error)) return;
-        res.status(500).json({success: false, error: "INTERNAL_ERROR"});
-      }
-    });
-  }
-);
-```
-
-### Ejemplo: consultar una inspección
-
-```typescript
-const {uid} = await verifyPrevalidadorBearerToken(req.headers.authorization);
-const data = await assertInspeccionBelongsToPrevalidador(inspeccionId, uid);
-```
-
-### Listar solicitudes del prevalidador
-
-Consulta Firestore (Admin SDK) filtrando por asociación:
-
-```typescript
-const snap = await db
-  .collection("solicitudesInspeccion")
-  .where("prevalidador.id", "==", uid)
-  .get();
-```
-
-Registros legacy con `prevalidador` como string deben usar el UID como valor del string, o migrarse al formato `{ id, nombre }`.
-
-### Listar inspecciones del prevalidador
-
-1. Obtener IDs de solicitudes del prevalidador (consulta anterior).
-2. Consultar `inspecciones` donde `datosAsignacion.solicitudInspeccionId` esté en ese listado (máx. 30 IDs por query `in` en Firestore; paginar o hacer varias queries si hace falta).
-
----
-
-## 7. Modelo de asociación
+Entender estos vínculos ayuda a interpretar respuestas y errores `403` / `404`.
 
 ### Solicitudes
 
-```
-solicitudesInspeccion/{id}
-  └── prevalidador: { id: "<uid>", nombre: "..." }
-```
-
-### Inspecciones (dos formas compatibles)
-
-**Preferido / futuro** — prevalidador embebido en la inspección:
+Cada solicitud creada por API queda asociada al prevalidador del token:
 
 ```
-inspecciones/{id}
-  └── prevalidador: { id: "<uid>", nombre: "..." }
+solicitud de inspección
+  └── prevalidador: { id, nombre }
 ```
 
-**Actual (fallback)** — enlace vía solicitud:
+### Inspecciones
+
+Una inspección en VEC puede vincularse al prevalidador de dos formas (VEC las trata como equivalentes para autorización):
+
+**Directa** (preferida cuando existe el dato):
 
 ```
-inspecciones/{id}
-  └── datosAsignacion.solicitudInspeccionId → solicitudesInspeccion/{id}
-        └── prevalidador: { id: "<uid>", nombre: "..." }
+inspección
+  └── prevalidador: { id, nombre }
 ```
 
-`assertInspeccionBelongsToPrevalidador` y `resolveInspeccionPrevalidadorId` evalúan **primero** el campo directo `inspeccion.prevalidador`; si no existe, siguen la cadena por solicitud. Así las APIs actuales siguen funcionando y, al migrar, basta con escribir `prevalidador` al crear o actualizar la inspección.
+**Por solicitud** (habitual tras asignar crédito en panel/app VEC):
 
-### Consultas para listar inspecciones
-
-Cuando las inspecciones ya tengan `prevalidador` embebido:
-
-```typescript
-const snap = await db
-  .collection("inspecciones")
-  .where("prevalidador.id", "==", uid)
-  .get();
+```
+inspección
+  └── solicitud de inspección vinculada
+        └── prevalidador: { id, nombre }
 ```
 
-Mientras coexistan registros sin ese campo, combinar con solicitudes (como en la sección 4) o migrar datos gradualmente.
+La API de certificado localiza la inspección por `solicitud_id` (relación 1:1). Ver [prevalidador-consulta-certificado.md](./prevalidador-consulta-certificado.md).
 
 ---
 
 ## 8. Seguridad
 
-- Credenciales del prevalidador solo en el **servidor integrador** (variables de entorno, secret manager).
-- HTTPS obligatorio.
-- No exponer la Web API Key de Firebase al integrador; solo la usan las Cloud Functions internamente.
-- Rate limiting en el integrador al llamar login (evitar brute force).
-- Validar siempre token + estatus activo + pertenencia del recurso en cada API.
+- Credenciales de integración **solo en su servidor** (variables de entorno, gestor de secretos).
+- HTTPS obligatorio en todas las llamadas.
+- No compartir el `idToken` con aplicaciones cliente finales si no es estrictamente necesario; prefiera que su backend llame a VEC.
+- Limite reintentos de login en su lado (protección ante fuerza bruta).
+- Ante robo de credenciales, notificar a **VEC** de inmediato para rotación.
 
 ---
 
-## 9. Despliegue
+## Alta de cuenta
 
-```bash
-firebase deploy --only functions:prevalidadorLogin,functions:prevalidadorListaClientes,functions:prevalidadorSolicitudInspeccion
-```
-
-### Multi-entorno (dev/qa/prod)
-
-Define la Web API Key por entorno en archivos `.env` de Functions.
-Por ahora usa `functions/.env.prod`:
-
-- `functions/.env.prod`
-
-Contenido:
-
-```bash
-FIREBASE_WEB_API_KEY=AIzaSy...
-```
-
-El código lee `process.env.FIREBASE_WEB_API_KEY` y, si no existe, usa un
-fallback compatible con el proyecto actual.
-
-Requisitos:
-
-1. Prevalidador creado en admin (Auth + `prevalidadores/{uid}` con `estatus: "activo"`).
-2. Solicitudes con `prevalidador.id` igual al UID del prevalidador.
+Para obtener usuario, contraseña y ambiente de pruebas (si aplica), solicitar al administrador **VEC** de su organización: debe existir un prevalidador **activo** vinculado a los clientes/contratos que usará la integración.
