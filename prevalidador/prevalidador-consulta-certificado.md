@@ -4,7 +4,7 @@ Devuelve el **certificado de inspección** en JSON, con las mismas secciones que
 
 La inspección se localiza por **`solicitud_id`** (el ID devuelto al crear la solicitud). En VEC existe una relación **1:1** entre esa solicitud y la inspección ejecutada.
 
-**Requisitos previos:** [`prevalidadorLogin`](./prevalidador-auth.md), [`prevalidadorListaClientes`](./prevalidador-lista-clientes.md) y [`prevalidadorSolicitudInspeccion`](./prevalidador-solicitud-inspeccion.md). El certificado solo está disponible cuando la solicitud ya tiene **inspección vinculada** (paso operativo en VEC, fuera de estas APIs).
+**Requisitos previos:** [`prevalidadorLogin`](./prevalidador-auth.md), [`prevalidadorListaClientes`](./prevalidador-lista-clientes.md) y [`prevalidadorSolicitudInspeccion`](./prevalidador-solicitud-inspeccion.md). El certificado exige inspección vinculada con **`status: "finalizada"`** (pasos operativos en VEC / app de inspección).
 
 ---
 
@@ -49,9 +49,10 @@ sequenceDiagram
 
 ### Cuándo llamar al certificado
 
-- **Sí:** la inspección ya existe y está vinculada a la solicitud (relación 1:1).
+- **Sí (200):** la inspección existe, está vinculada a la solicitud y su campo **`status`** en VEC es **`finalizada`**.
 - **No (404 `certificado-no-disponible`):** la solicitud sigue en `pendiente` sin asignación, o la inspección aún no existe en VEC.
-- **Recomendado:** consultar cuando el integrador sabe que la inspección terminó (p. ej. webhook interno, polling de estatus en tu sistema, o notificación del panel VEC). Si `resultadoVerificacion` es `null`, las emisiones BlueDriver aún no están en `finalizado`; el resto del certificado puede traer fotos y datos generales.
+- **No (409 `inspeccion-no-completada`):** la inspección existe pero `status` no es `finalizada`. Mensaje: *«La inspección no se ha completado.»*
+- Con inspección `finalizada`, si `resultadoVerificacion` es `null`, las emisiones BlueDriver aún no están en `finalizado`; el resto del certificado puede incluir fotos y datos generales.
 
 ### Relación solicitud ↔ inspección
 
@@ -152,6 +153,7 @@ La respuesta incluye `zona_horaria` con la zona IANA usada para interpretar `enc
 | 401 | `missing-token`, `invalid-token`, … | Token ausente o inválido |
 | 403 | `forbidden` | La solicitud no es del prevalidador |
 | 404 | `not-found`, `certificado-no-disponible` | Solicitud inexistente o sin inspección |
+| 409 | `inspeccion-no-completada` | Inspección con `status` distinto de `finalizada` |
 | 409 | `inspeccion-ambigua` | Más de una inspección para la misma solicitud |
 | 405 | `METHOD_NOT_ALLOWED` | No es GET ni POST |
 | 500 | `INTERNAL_ERROR` | Error no controlado |
