@@ -1,10 +1,10 @@
 # API `prevalidadorSolicitudInspeccion`
 
-Crea un registro en **`solicitudesInspeccion`** con el mismo payload y validaciones que el modal **Nueva solicitud de inspección** (modo crear) del panel VEC.
+Registra una **nueva solicitud de inspección** en VEC.
 
-- El **prevalidador** se toma del `idToken` (no se envía en el body).
+- El **prevalidador** se identifica con el token de sesión (no se envía en el body).
 - El **estatus** inicial es siempre `pendiente` (no editable en creación).
-- El **cliente** se resuelve por `cliente_id` y debe tener contrato vigente con ese prevalidador (mismo criterio que `prevalidadorListaClientes`).
+- El **cliente** se indica con `cliente_id` y debe tener contrato vigente con ese prevalidador (mismo criterio que [`prevalidadorListaClientes`](./prevalidador-lista-clientes.md)).
 
 **Requisitos previos:** [`prevalidadorLogin`](./prevalidador-auth.md) y, recomendado, [`prevalidadorListaClientes`](./prevalidador-lista-clientes.md) para obtener un `cliente_id` válido.
 
@@ -104,16 +104,17 @@ curl -s -X POST \
 }
 ```
 
-### Auditoría al crear por API
+### Metadatos de la solicitud creada
 
 | Campo | Valor |
 |---|---|
-| `createdAt` | Fecha/hora de creación en VEC (servidor) |
-| `createdBy` | Prevalidador del token (`tipo: "prevalidador"`) |
-| `modifiedAt` | `null` hasta la primera edición en el panel VEC |
-| `modifiedBy` | `null` hasta que un usuario del panel VEC edite la solicitud |
+| `createdBy` | Prevalidador de la sesión (`tipo: "prevalidador"`) |
+| `modifiedAt` | `null` hasta que VEC modifique la solicitud |
+| `modifiedBy` | `null` hasta que VEC modifique la solicitud |
 
-`fechaRegistro` refleja la misma fecha de alta (visible en el panel VEC).
+La fecha de alta de la solicitud queda registrada en VEC como `fechaRegistro` (consultable en [`prevalidadorListaSolicitudes`](./prevalidador-lista-solicitudes.md)).
+
+**Consultar solicitudes creadas:** [prevalidadorListaSolicitudes](./prevalidador-lista-solicitudes.md).
 
 **Siguiente paso (cuando la inspección esté hecha en VEC):** [prevalidadorConsultaCertificado](./prevalidador-consulta-certificado.md) con el mismo `solicitud.id`.
 

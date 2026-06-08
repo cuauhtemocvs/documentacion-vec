@@ -1,6 +1,6 @@
 # API `prevalidadorListaClientes`
 
-Lista los **clientes** que su prevalidador puede usar al registrar solicitudes de inspección en **VEC**. Mismos criterios que el listado de clientes en el panel VEC al crear una solicitud.
+Lista los **clientes** que su prevalidador puede usar al registrar solicitudes de inspección en **VEC**. Aplica los mismos criterios de elegibilidad que al crear una solicitud.
 
 **Requisito previo:** token obtenido con [`prevalidadorLogin`](./prevalidador-auth.md#1-login--prevalidadorlogin).
 
@@ -13,7 +13,6 @@ Lista los **clientes** que su prevalidador puede usar al registrar solicitudes d
 | **API** | `prevalidadorListaClientes` |
 | **Método** | `GET` |
 | **URL (prod)** | `https://us-central1-vec-v2.cloudfunctions.net/prevalidadorListaClientes` |
-| **Región** | `us-central1` |
 | **Auth** | `Authorization: Bearer <idToken>` |
 | **Body** | Ninguno |
 | **CORS** | Cualquier origen (pensado para server-to-server) |
@@ -52,9 +51,9 @@ Un cliente aparece si en **VEC** tiene **al menos un contrato** que cumpla **amb
 **No se incluyen:**
 
 - Clientes sin contratos
-- Contratos con otro `prevalidador.id`
+- Contratos asociados a otro prevalidador
 - Contratos vencidos o aún no iniciados
-- Contratos sin `vigencia.inicio` / `vigencia.fin` válidos
+- Contratos sin periodo de vigencia válido
 
 **Orden:** ascendente por `alias`.
 
@@ -112,6 +111,7 @@ console.log(data.clientes);
       "alias": "Taller Norte",
       "numeroPatente": "1234",
       "rfc": "XAXX010101000",
+      "usuarioPrevalidador": "usuario-taller-norte",
       "etiqueta": "1234 - Taller Norte (Razón Social SA de CV)"
     }
   ]
@@ -127,7 +127,8 @@ console.log(data.clientes);
 | `alias` | string | Nombre corto en el panel |
 | `numeroPatente` | string | Número de patente del cliente |
 | `rfc` | string | RFC |
-| `etiqueta` | string | Texto del select en el panel: `{patente} - {alias} ({nombre})` |
+| `usuarioPrevalidador` | string | Usuario del contrato vigente asociado al prevalidador de la sesión. Si no está definido, se devuelve `""` |
+| `etiqueta` | string | Texto descriptivo: `{patente} - {alias} ({nombre})` |
 
 ### Uso al crear una solicitud
 
@@ -158,7 +159,7 @@ Si el prevalidador no tiene clientes con contrato vigente:
 }
 ```
 
-No es error HTTP; el integrador debe manejar el caso (equivalente al mensaje *"No hay clientes con contrato vigente para este prevalidador"* en el panel).
+No es error HTTP; el integrador debe manejar el caso en su aplicación.
 
 ---
 

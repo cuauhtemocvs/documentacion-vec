@@ -108,11 +108,19 @@ Documentación: **[prevalidador-lista-clientes.md](./prevalidador-lista-clientes
 
 Documentación: **[prevalidador-solicitud-inspeccion.md](./prevalidador-solicitud-inspeccion.md)**
 
-`POST` con datos del vehículo y `cliente_id`. El prevalidador y el estatus inicial `pendiente` los asigna VEC en servidor. **Guarde el `solicitud.id` de la respuesta.**
+`POST` con datos del vehículo y `cliente_id`. El prevalidador y el estatus inicial `pendiente` los asigna VEC. **Guarde el `solicitud.id` de la respuesta.**
 
 ---
 
-## 4. Consultar certificado — `prevalidadorConsultaCertificado`
+## 4. Listar solicitudes — `prevalidadorListaSolicitudes`
+
+Documentación: **[prevalidador-lista-solicitudes.md](./prevalidador-lista-solicitudes.md)**
+
+`GET` con `Authorization: Bearer <idToken>`. Devuelve las solicitudes del prevalidador autenticado, con filtros opcionales por fecha, VIN y orden.
+
+---
+
+## 5. Consultar certificado — `prevalidadorConsultaCertificado`
 
 Documentación: **[prevalidador-consulta-certificado.md](./prevalidador-consulta-certificado.md)**
 
@@ -120,7 +128,7 @@ Documentación: **[prevalidador-consulta-certificado.md](./prevalidador-consulta
 
 ---
 
-## 5. Renovar sesión
+## 6. Renovar sesión
 
 Cuando una API responda `401` con `"Token inválido o expirado."`:
 
@@ -150,7 +158,7 @@ Opcional: cachear el token y renovarlo antes de que venza `expiresIn`.
 
 ---
 
-## 6. Header en todas las APIs
+## 7. Header en todas las APIs
 
 ```http
 Authorization: Bearer eyJhbGciOiJSUzI1NiIs...
@@ -167,7 +175,7 @@ curl -s -X GET \
 
 ---
 
-## 7. Modelo de asociación (referencia)
+## 8. Modelo de asociación (referencia)
 
 Entender estos vínculos ayuda a interpretar respuestas y errores `403` / `404`.
 
@@ -203,7 +211,7 @@ La API de certificado localiza la inspección por `solicitud_id` (relación 1:1)
 
 ---
 
-## 8. Seguridad
+## 9. Seguridad
 
 - Credenciales de integración **solo en su servidor** (variables de entorno, gestor de secretos).
 - HTTPS obligatorio en todas las llamadas.
