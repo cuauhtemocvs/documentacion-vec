@@ -112,7 +112,15 @@ Documentación: **[prevalidador-solicitud-inspeccion.md](./prevalidador-solicitu
 
 ---
 
-## 4. Listar solicitudes — `prevalidadorListaSolicitudes`
+## 4. Actualizar solicitud — `prevalidadorActualizaSolicitudInspeccion`
+
+Documentación: **[prevalidador-actualiza-solicitud-inspeccion.md](./prevalidador-actualiza-solicitud-inspeccion.md)**
+
+`POST` con `solicitud_id` y los mismos datos del vehículo que en la creación. Permite corregir una solicitud en estatus `pendiente` o `enProceso`. Si la inspección vinculada ya está finalizada, la API responde `409` y no modifica ningún registro.
+
+---
+
+## 5. Listar solicitudes — `prevalidadorListaSolicitudes`
 
 Documentación: **[prevalidador-lista-solicitudes.md](./prevalidador-lista-solicitudes.md)**
 
@@ -120,7 +128,7 @@ Documentación: **[prevalidador-lista-solicitudes.md](./prevalidador-lista-solic
 
 ---
 
-## 5. Consultar certificado — `prevalidadorConsultaCertificado`
+## 6. Consultar certificado — `prevalidadorConsultaCertificado`
 
 Documentación: **[prevalidador-consulta-certificado.md](./prevalidador-consulta-certificado.md)**
 
@@ -128,7 +136,7 @@ Documentación: **[prevalidador-consulta-certificado.md](./prevalidador-consulta
 
 ---
 
-## 6. Renovar sesión
+## 7. Renovar sesión
 
 Cuando una API responda `401` con `"Token inválido o expirado."`:
 

@@ -116,6 +116,8 @@ La fecha de alta de la solicitud queda registrada en VEC como `fechaRegistro` (c
 
 **Consultar solicitudes creadas:** [prevalidadorListaSolicitudes](./prevalidador-lista-solicitudes.md).
 
+**Corregir datos de una solicitud existente:** [prevalidadorActualizaSolicitudInspeccion](./prevalidador-actualiza-solicitud-inspeccion.md) con el mismo `solicitud.id`.
+
 **Siguiente paso (cuando la inspección esté hecha en VEC):** [prevalidadorConsultaCertificado](./prevalidador-consulta-certificado.md) con el mismo `solicitud.id`.
 
 ---

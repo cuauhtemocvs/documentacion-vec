@@ -100,7 +100,7 @@ curl -s -G \
 | `nombre_propietario` | string | Nombre del propietario |
 | `fechaRegistro` | string | Fecha de alta en ISO 8601 con zona horaria (UTC, sufijo `Z`) |
 
-Los nombres de los campos de entrada coinciden con el body de [`prevalidadorSolicitudInspeccion`](./prevalidador-solicitud-inspeccion.md).
+Los campos de vehículo y cliente coinciden con el body de [`prevalidadorSolicitudInspeccion`](./prevalidador-solicitud-inspeccion.md). Para actualizar una solicitud listada, use [`prevalidadorActualizaSolicitudInspeccion`](./prevalidador-actualiza-solicitud-inspeccion.md) con su `id` como `solicitud_id`.
 
 ### Lista vacía
 

@@ -13,8 +13,9 @@ Documentación para **equipos de sistemas de prevalidadores** que consumen las A
 | 1 | `prevalidadorLogin` | [Autenticación y guía general](./prevalidador-auth.md) |
 | 2 | `prevalidadorListaClientes` | [Lista de clientes](./prevalidador-lista-clientes.md) |
 | 3 | `prevalidadorSolicitudInspeccion` | [Crear solicitud de inspección](./prevalidador-solicitud-inspeccion.md) |
-| 4 | `prevalidadorListaSolicitudes` | [Lista de solicitudes](./prevalidador-lista-solicitudes.md) |
-| 5 | `prevalidadorConsultaCertificado` | [Consultar certificado](./prevalidador-consulta-certificado.md) |
+| 4 | `prevalidadorActualizaSolicitudInspeccion` | [Actualizar solicitud de inspección](./prevalidador-actualiza-solicitud-inspeccion.md) |
+| 5 | `prevalidadorListaSolicitudes` | [Lista de solicitudes](./prevalidador-lista-solicitudes.md) |
+| 6 | `prevalidadorConsultaCertificado` | [Consultar certificado](./prevalidador-consulta-certificado.md) |
 
 ---
 
@@ -33,6 +34,10 @@ sequenceDiagram
   Usted->>VEC: 3. Crear solicitud
   VEC-->>Usted: solicitud_id
   Note over Usted: Guardar solicitud_id
+  opt Corregir datos antes de asignación
+    Usted->>VEC: 3b. Actualizar solicitud (solicitud_id)
+    VEC-->>Usted: solicitud actualizada
+  end
   Usted->>VEC: 4. Listar solicitudes (opcional)
   VEC-->>Usted: solicitudes[]
   Ops->>Ops: 5. Asignación e inspección (panel / app VEC)
@@ -43,9 +48,10 @@ sequenceDiagram
 1. Obtener `idToken` con credenciales que **VEC** entregó a su organización.
 2. Listar clientes con contrato vigente y elegir `cliente_id`.
 3. Crear la solicitud de inspección; **guardar `solicitud.id`** en su sistema.
-4. Consultar el listado de solicitudes (opcional), por ejemplo para conciliar registros.
-5. Esperar a que VEC asigne crédito y se ejecute la inspección (fuera de estas APIs).
-6. Consultar el certificado con el mismo `solicitud_id`.
+4. Actualizar la solicitud si hubo correcciones de datos (opcional; solo mientras no esté finalizada la inspección). Ver [prevalidador-actualiza-solicitud-inspeccion.md](./prevalidador-actualiza-solicitud-inspeccion.md).
+5. Consultar el listado de solicitudes (opcional), por ejemplo para conciliar registros.
+6. Esperar a que VEC asigne crédito y se ejecute la inspección (fuera de estas APIs).
+7. Consultar el certificado con el mismo `solicitud_id`.
 
 Detalle de autenticación, renovación de token y alcance de datos: [prevalidador-auth.md](./prevalidador-auth.md).
 
