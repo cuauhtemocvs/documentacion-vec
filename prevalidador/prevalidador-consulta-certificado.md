@@ -45,7 +45,7 @@ sequenceDiagram
 | 2 | Integrador | `prevalidadorListaClientes` | `cliente_id` para la solicitud |
 | 3 | Integrador | `prevalidadorSolicitudInspeccion` | **`solicitud_id`** (guardar en tu BD) |
 | 4 | Operación VEC | En panel web o app móvil VEC: asignar crédito y realizar la inspección | Inspección vinculada a su `solicitud_id` |
-| 5 | Integrador | **`prevalidadorConsultaCertificado`** con ese `solicitud_id` | `certificado` + `inspeccion_id` |
+| 5 | Integrador | **`prevalidadorConsultaCertificado`** con ese `solicitud_id` | `certificado` + `inspeccion_id` + `folio` |
 
 ### Cuándo llamar al certificado
 
@@ -116,6 +116,7 @@ curl -s -X POST \
   "success": true,
   "solicitud_id": "...",
   "inspeccion_id": "...",
+  "folio": "AB00042",
   "zona_horaria": "America/Mazatlan",
   "certificado": {
     "encabezado": { },
@@ -127,11 +128,20 @@ curl -s -X POST \
 }
 ```
 
+### Campos de nivel superior
+
+| Campo | Tipo | Descripción |
+|---|---|---|
+| `solicitud_id` | string | ID de la solicitud consultada |
+| `inspeccion_id` | string | ID del documento de inspección en Firestore |
+| `folio` | string | Folio de la inspección (`AA00000`: prefijo del cliente + consecutivo). Si la inspección no tiene `folio` en VEC, coincide con `inspeccion_id` |
+| `zona_horaria` | string | Zona IANA usada para `encabezado.fecha` |
+
 ### Secciones (`certificado`)
 
 | Sección | Contenido (equivalente al HTML) |
 |---|---|
-| `encabezado` | Folio, VEC LLC, patente, aduana, `fecha` (ISO 8601, p. ej. `2026-05-29T14:19:00-06:00`), equipo BlueDriver, MAC, URLs y texto QR de datos |
+| `encabezado` | Folio (`folioCertificado`, mismo valor que `folio` en la raíz), VEC LLC, patente, aduana, `fecha` (ISO 8601, p. ej. `2026-05-29T14:19:00-06:00`), equipo BlueDriver, MAC, URLs y texto QR de datos |
 | `datosGeneralesYVehiculares` | Propietario, país, marca, VIN, año, modelo, odómetro CarInfo |
 | `resultadoVerificacion` | `null` si emisiones no están `finalizado`; si no, `monitores[]` + `resultadoFinal` |
 | `fotografias` | `fotos` y `fotosVin`: arrays de `{ posicion, url_imagen }`; resumen IA, odómetro en tablero |

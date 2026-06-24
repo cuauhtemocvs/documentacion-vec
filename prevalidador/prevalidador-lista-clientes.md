@@ -111,6 +111,7 @@ console.log(data.clientes);
       "alias": "Taller Norte",
       "numeroPatente": "1234",
       "rfc": "XAXX010101000",
+      "prefijoFolio": "AB",
       "usuarioPrevalidador": "usuario-taller-norte",
       "etiqueta": "1234 - Taller Norte (Razón Social SA de CV)"
     }
@@ -127,6 +128,7 @@ console.log(data.clientes);
 | `alias` | string | Nombre corto en el panel |
 | `numeroPatente` | string | Número de patente del cliente |
 | `rfc` | string | RFC |
+| `prefijoFolio` | string | Prefijo de folio del cliente (2 letras mayúsculas, sin I, O, Q ni Ñ). Si no está configurado, se devuelve `""` |
 | `usuarioPrevalidador` | string | Usuario del contrato vigente asociado al prevalidador de la sesión. Si no está definido, se devuelve `""` |
 | `etiqueta` | string | Texto descriptivo: `{patente} - {alias} ({nombre})` |
 
@@ -141,10 +143,13 @@ Al persistir una solicitud de inspección, el objeto `cliente` debe usar la mism
     "nombre": "Razón Social SA de CV",
     "alias": "Taller Norte",
     "numeroPatente": "1234",
-    "rfc": "XAXX010101000"
+    "rfc": "XAXX010101000",
+    "prefijoFolio": "AB"
   }
 }
 ```
+
+`prefijoFolio` es informativo en la solicitud; el folio de cada inspección (`AA00000`) se asigna al crear la inspección en VEC.
 
 ### Lista vacía
 
