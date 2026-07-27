@@ -4,7 +4,7 @@ Registra una **nueva solicitud de inspección** en VEC.
 
 - El **prevalidador** se identifica con el token de sesión (no se envía en el body).
 - El **estatus** inicial es siempre `pendiente` (no editable en creación).
-- El **cliente** se indica con `cliente_id` **o** con `numeroPatente` (al menos uno).
+- El **cliente** se indica con `cliente_id` **o** con `numero_patente` (al menos uno).
 
 **Requisitos previos:** [`prevalidadorLogin`](./prevalidador-auth.md) y, recomendado, [`prevalidadorListaClientes`](./prevalidador-lista-clientes.md) para obtener un `cliente_id` válido.
 
@@ -25,8 +25,8 @@ Registra una **nueva solicitud de inspección** en VEC.
 
 | Campo | Tipo | Requerido | Validación |
 |---|---|---|---|
-| `cliente_id` | string | Condicional | Requerido si no se envía `numeroPatente`. Debe existir y ser elegible para el prevalidador del token |
-| `numeroPatente` | string | Condicional | Requerido si no se envía `cliente_id`. Exactamente 4 dígitos numéricos (`^\d{4}$`) |
+| `cliente_id` | string | Condicional | Requerido si no se envía `numero_patente`. Debe existir y ser elegible para el prevalidador del token |
+| `numero_patente` | string | Condicional | Requerido si no se envía `cliente_id`. Exactamente 4 dígitos numéricos (`^\d{4}$`) |
 | `vin` | string | Sí | No vacío |
 | `fabricante` | string | Sí | No vacío |
 | `modelo` | string | Sí | No vacío |
@@ -34,13 +34,13 @@ Registra una **nueva solicitud de inspección** en VEC.
 | `anio_modelo` | number o string | Sí | Entero entre `1900` y año actual + 1 |
 | `nombre_propietario` | string | Sí | No vacío |
 
-También se aceptan alias en camelCase (`clienteId`, `anioModelo`, `nombrePropietario`) y `numero_patente` por compatibilidad.
+También se aceptan alias en camelCase (`clienteId`, `numeroPatente`, `anioModelo`, `nombrePropietario`) por compatibilidad.
 
-Si se envían **ambos** `cliente_id` y `numeroPatente`, **tiene prioridad `numeroPatente`** para resolver el cliente y detectar patente compartida.
+Si se envían **ambos** `cliente_id` y `numero_patente`, **tiene prioridad `numero_patente`** para resolver el cliente y detectar patente compartida.
 
-### Resolución por `numeroPatente`
+### Resolución por `numero_patente`
 
-1. Se buscan clientes con ese `numeroPatente` (exacto tras `trim`).
+1. Se buscan clientes con ese número de patente (exacto tras `trim`).
 2. Si no hay ninguno → `404 cliente-not-found`.
 3. Si ninguno es elegible (contrato vigente con el prevalidador del token) → `403 cliente-no-elegible`.
 4. Si algún cliente tiene `patenteCompartida === true` → **caso patente compartida**: la solicitud se crea con embed parcial de cliente.
@@ -60,11 +60,11 @@ Si se envían **ambos** `cliente_id` y `numeroPatente`, **tiene prioridad `numer
 }
 ```
 
-### Ejemplo con `numeroPatente` (cliente único)
+### Ejemplo con `numero_patente` (cliente único)
 
 ```json
 {
-  "numeroPatente": "1234",
+  "numero_patente": "1234",
   "vin": "1HGBH41JXMN109186",
   "fabricante": "Honda",
   "modelo": "Civic",
@@ -80,7 +80,7 @@ curl -s -X POST \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ${ID_TOKEN}" \
   -d '{
-    "numeroPatente": "1234",
+    "numero_patente": "1234",
     "vin": "1HGBH41JXMN109186",
     "fabricante": "Honda",
     "modelo": "Civic",
@@ -133,7 +133,7 @@ curl -s -X POST \
 
 ### Patente compartida
 
-Cuando `numeroPatente` corresponde a clientes con `patenteCompartida === true`, el embed de cliente queda así (el resto se completa al asignar en VEC):
+Cuando `numero_patente` corresponde a clientes con `patenteCompartida === true`, el embed de cliente queda así (el resto se completa al asignar en VEC):
 
 ```json
 {
@@ -180,11 +180,11 @@ La fecha de alta de la solicitud queda registrada en VEC como `fechaRegistro` (c
 
 | HTTP | `error` | Cuándo |
 |---|---|---|
-| 400 | `VALIDATION_ERROR` | Campos faltantes, `anio_modelo` fuera de rango, o `numeroPatente` no es de 4 dígitos |
+| 400 | `VALIDATION_ERROR` | Campos faltantes, `anio_modelo` fuera de rango, o `numero_patente` no es de 4 dígitos |
 | 401 | `missing-token` / `invalid-token` | Token ausente o inválido |
 | 403 | `not-prevalidador` / `prevalidador-inactivo` | Token no es prevalidador activo |
 | 403 | `cliente-no-elegible` | Cliente(s) sin contrato vigente con este prevalidador |
-| 404 | `cliente-not-found` | `cliente_id` no existe, o ningún cliente con ese `numeroPatente` |
+| 404 | `cliente-not-found` | `cliente_id` no existe, o ningún cliente con ese `numero_patente` |
 | 405 | `METHOD_NOT_ALLOWED` | No es POST |
 | 500 | `INTERNAL_ERROR` | Fallo interno |
 
@@ -219,8 +219,8 @@ sequenceDiagram
     API->>Clientes: GET Bearer
     Clientes-->>API: clientes[].id
     API->>Crear: POST cliente_id + Bearer
-  else Por numeroPatente
-    API->>Crear: POST numeroPatente + Bearer
+  else Por numero_patente
+    API->>Crear: POST numero_patente + Bearer
   end
   Crear-->>API: solicitud.id (201)
   Note over API: Después: operación VEC + consulta certificado
