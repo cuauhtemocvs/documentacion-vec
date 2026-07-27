@@ -30,7 +30,8 @@ Actualiza una **solicitud de inspección existente** del prevalidador autenticad
 | Campo | Tipo | Requerido | Validación |
 |---|---|---|---|
 | `solicitud_id` | string | Sí | Debe existir y pertenecer al prevalidador del token |
-| `cliente_id` | string | Sí | Debe existir y ser elegible para el prevalidador del token |
+| `cliente_id` | string | Condicional | Requerido si no se envía `numeroPatente`. Debe existir y ser elegible para el prevalidador del token |
+| `numeroPatente` | string | Condicional | Requerido si no se envía `cliente_id`. Exactamente 4 dígitos numéricos. Si se envían ambos, **prioridad a `numeroPatente`** (misma resolución que en creación) |
 | `vin` | string | Sí | No vacío |
 | `fabricante` | string | Sí | No vacío |
 | `modelo` | string | Sí | No vacío |
@@ -38,7 +39,9 @@ Actualiza una **solicitud de inspección existente** del prevalidador autenticad
 | `anio_modelo` | number o string | Sí | Entero entre `1900` y año actual + 1 |
 | `nombre_propietario` | string | Sí | No vacío |
 
-También se aceptan alias en camelCase (`solicitudId`, `clienteId`, `anioModelo`, `nombrePropietario`) por compatibilidad.
+También se aceptan alias en camelCase (`solicitudId`, `clienteId`, `anioModelo`, `nombrePropietario`) y `numero_patente` por compatibilidad.
+
+La resolución de cliente por `numeroPatente` (incluidos los casos de patente compartida y errores `404`/`403`) es la misma que en [`prevalidadorSolicitudInspeccion`](./prevalidador-solicitud-inspeccion.md).
 
 ### Ejemplo
 
@@ -55,6 +58,21 @@ También se aceptan alias en camelCase (`solicitudId`, `clienteId`, `anioModelo`
 }
 ```
 
+### Ejemplo con `numeroPatente`
+
+```json
+{
+  "solicitud_id": "docIdExistente",
+  "numeroPatente": "1234",
+  "vin": "1HGBH41JXMN109186",
+  "fabricante": "Honda",
+  "modelo": "Civic",
+  "pais": "México",
+  "anio_modelo": 2022,
+  "nombre_propietario": "Juan Pérez"
+}
+```
+
 ```bash
 curl -s -X POST \
   "https://us-central1-vec-v2.cloudfunctions.net/prevalidadorActualizaSolicitudInspeccion" \
@@ -62,7 +80,7 @@ curl -s -X POST \
   -H "Authorization: Bearer ${ID_TOKEN}" \
   -d '{
     "solicitud_id": "docIdExistente",
-    "cliente_id": "abc123cliente",
+    "numeroPatente": "1234",
     "vin": "1HGBH41JXMN109186",
     "fabricante": "Honda",
     "modelo": "Civic",
@@ -139,9 +157,9 @@ curl -s -X POST \
 | 401 | `missing-token` / `invalid-token` | Token ausente o inválido |
 | 403 | `not-prevalidador` / `prevalidador-inactivo` | Token no es prevalidador activo |
 | 403 | `forbidden` | La solicitud no pertenece a este prevalidador |
-| 403 | `cliente-no-elegible` | `cliente_id` sin contrato vigente con este prevalidador |
+| 403 | `cliente-no-elegible` | Cliente(s) sin contrato vigente con este prevalidador |
 | 404 | `not-found` | `solicitud_id` no existe |
-| 404 | `cliente-not-found` | `cliente_id` no existe |
+| 404 | `cliente-not-found` | `cliente_id` no existe, o ningún cliente con ese `numeroPatente` |
 | 409 | `inspeccion-finalizada` | La inspección vinculada ya está finalizada; no se actualiza nada |
 | 405 | `METHOD_NOT_ALLOWED` | No es POST |
 | 500 | `INTERNAL_ERROR` | Fallo interno |
