@@ -31,7 +31,7 @@ Actualiza una **solicitud de inspección existente** del prevalidador autenticad
 |---|---|---|---|
 | `solicitud_id` | string | Sí | Debe existir y pertenecer al prevalidador del token |
 | `cliente_id` | string | Condicional | Requerido si no se envía `numero_patente`. Debe existir y ser elegible para el prevalidador del token |
-| `numero_patente` | string | Condicional | Requerido si no se envía `cliente_id`. Exactamente 4 dígitos numéricos. Si se envían ambos, **prioridad a `numero_patente`** (misma resolución que en creación) |
+| `numero_patente` | string | Condicional | Requerido si no se envía `cliente_id`. Exactamente 4 dígitos numéricos. Si se envían ambos, **prioridad a `cliente_id`** y se ignora `numero_patente` (sin búsqueda de patente compartida) |
 | `vin` | string | Sí | No vacío |
 | `fabricante` | string | Sí | No vacío |
 | `modelo` | string | Sí | No vacío |

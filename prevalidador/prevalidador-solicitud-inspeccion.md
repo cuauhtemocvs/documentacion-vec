@@ -4,7 +4,7 @@ Registra una **nueva solicitud de inspección** en VEC.
 
 - El **prevalidador** se identifica con el token de sesión (no se envía en el body).
 - El **estatus** inicial es siempre `pendiente` (no editable en creación).
-- El **cliente** se indica con `cliente_id` **o** con `numero_patente` (al menos uno).
+- El **cliente** se indica con `cliente_id` **o** con `numero_patente` (al menos uno; si vienen ambos, manda `cliente_id`).
 
 **Requisitos previos:** [`prevalidadorLogin`](./prevalidador-auth.md) y, recomendado, [`prevalidadorListaClientes`](./prevalidador-lista-clientes.md) para obtener un `cliente_id` válido.
 
@@ -36,7 +36,7 @@ Registra una **nueva solicitud de inspección** en VEC.
 
 También se aceptan alias en camelCase (`clienteId`, `numeroPatente`, `anioModelo`, `nombrePropietario`) por compatibilidad.
 
-Si se envían **ambos** `cliente_id` y `numero_patente`, **tiene prioridad `numero_patente`** para resolver el cliente y detectar patente compartida.
+Si se envían **ambos** `cliente_id` y `numero_patente`, **tiene prioridad `cliente_id`** (es único en el sistema) y **no se realiza la búsqueda de patente compartida**; `numero_patente` se ignora. La resolución por patente solo aplica cuando se envía `numero_patente` sin `cliente_id`.
 
 ### Resolución por `numero_patente`
 
