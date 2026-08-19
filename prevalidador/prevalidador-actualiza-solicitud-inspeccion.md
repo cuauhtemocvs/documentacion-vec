@@ -6,9 +6,8 @@ Actualiza una **solicitud de inspección existente** del prevalidador autenticad
 - Debe indicar el **`solicitud_id`** de la solicitud a modificar (el mismo `id` devuelto al crearla).
 - Los demás campos del body son los mismos que en [`prevalidadorSolicitudInspeccion`](./prevalidador-solicitud-inspeccion.md).
 - Solo se pueden actualizar solicitudes en estatus **`pendiente`** o **`enProceso`**.
-- Si la inspección vinculada ya está **finalizada**, la operación se rechaza y **no se modifica ningún dato**.
+- El **status de la inspección vinculada no bloquea** la actualización (incluye `finalizada`). VEC aplica los datos a la solicitud y, si hay asignación o inspección, los propaga a esos registros.
 - VEC actualiza `modifiedAt` y `modifiedBy` con el prevalidador de la sesión.
-- Si la solicitud ya tiene asignación o inspección en curso, VEC propaga los datos del vehículo y del cliente a los registros vinculados.
 
 **Requisitos previos:** [`prevalidadorLogin`](./prevalidador-auth.md), [`prevalidadorSolicitudInspeccion`](./prevalidador-solicitud-inspeccion.md) (o un `solicitud_id` obtenido de [`prevalidadorListaSolicitudes`](./prevalidador-lista-solicitudes.md)).
 
@@ -145,7 +144,7 @@ curl -s -X POST \
 
 **Obtener el `solicitud_id`:** respuesta de creación o [`prevalidadorListaSolicitudes`](./prevalidador-lista-solicitudes.md).
 
-**Cuando la inspección ya terminó:** use [`prevalidadorConsultaCertificado`](./prevalidador-consulta-certificado.md); no es posible editar la solicitud.
+**Cuando la inspección ya terminó:** la solicitud sigue siendo actualizable (si su `estatus` es `pendiente` o `enProceso`). El certificado se consulta con [`prevalidadorConsultaCertificado`](./prevalidador-consulta-certificado.md).
 
 ---
 
@@ -160,7 +159,6 @@ curl -s -X POST \
 | 403 | `cliente-no-elegible` | Cliente(s) sin contrato vigente con este prevalidador |
 | 404 | `not-found` | `solicitud_id` no existe |
 | 404 | `cliente-not-found` | `cliente_id` no existe, o ningún cliente con ese `numero_patente` |
-| 409 | `inspeccion-finalizada` | La inspección vinculada ya está finalizada; no se actualiza nada |
 | 405 | `METHOD_NOT_ALLOWED` | No es POST |
 | 500 | `INTERNAL_ERROR` | Fallo interno |
 
@@ -174,16 +172,6 @@ curl -s -X POST \
   "details": [
     { "field": "solicitud_id", "message": "Solo se pueden actualizar solicitudes en estatus pendiente o enProceso" }
   ]
-}
-```
-
-### Ejemplo inspección finalizada (409)
-
-```json
-{
-  "success": false,
-  "error": "inspeccion-finalizada",
-  "message": "No se puede actualizar la solicitud porque la inspección ya está finalizada."
 }
 ```
 
@@ -203,7 +191,7 @@ sequenceDiagram
   Login-->>API: idToken
   API->>Crear: POST body + Bearer
   Crear-->>API: solicitud.id
-  Note over API: Corregir datos antes de asignación
+  Note over API: Corregir datos (también con inspección finalizada)
   API->>Actualizar: POST solicitud_id + datos + Bearer
   Actualizar-->>API: solicitud actualizada (200)
   Note over API: Tras inspección finalizada en VEC

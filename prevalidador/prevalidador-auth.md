@@ -116,7 +116,7 @@ Documentación: **[prevalidador-solicitud-inspeccion.md](./prevalidador-solicitu
 
 Documentación: **[prevalidador-actualiza-solicitud-inspeccion.md](./prevalidador-actualiza-solicitud-inspeccion.md)**
 
-`POST` con `solicitud_id` y los mismos datos del vehículo que en la creación. Permite corregir una solicitud en estatus `pendiente` o `enProceso`. Si la inspección vinculada ya está finalizada, la API responde `409` y no modifica ningún registro.
+`POST` con `solicitud_id` y los mismos datos del vehículo que en la creación. Permite corregir una solicitud en estatus `pendiente` o `enProceso`, independientemente del status de la inspección vinculada (incluye `finalizada`).
 
 ---
 

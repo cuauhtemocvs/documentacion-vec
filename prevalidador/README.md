@@ -34,7 +34,7 @@ sequenceDiagram
   Usted->>VEC: 3. Crear solicitud
   VEC-->>Usted: solicitud_id
   Note over Usted: Guardar solicitud_id
-  opt Corregir datos antes de asignación
+  opt Corregir datos (también con inspección finalizada)
     Usted->>VEC: 3b. Actualizar solicitud (solicitud_id)
     VEC-->>Usted: solicitud actualizada
   end
@@ -48,7 +48,7 @@ sequenceDiagram
 1. Obtener `idToken` con credenciales que **VEC** entregó a su organización.
 2. Listar clientes con contrato vigente y elegir `cliente_id`.
 3. Crear la solicitud de inspección; **guardar `solicitud.id`** en su sistema.
-4. Actualizar la solicitud si hubo correcciones de datos (opcional; solo mientras no esté finalizada la inspección). Ver [prevalidador-actualiza-solicitud-inspeccion.md](./prevalidador-actualiza-solicitud-inspeccion.md).
+4. Actualizar la solicitud si hubo correcciones de datos (opcional; el status de la inspección no bloquea la operación). Ver [prevalidador-actualiza-solicitud-inspeccion.md](./prevalidador-actualiza-solicitud-inspeccion.md).
 5. Consultar el listado de solicitudes (opcional), por ejemplo para conciliar registros.
 6. Esperar a que VEC asigne crédito y se ejecute la inspección (fuera de estas APIs).
 7. Consultar el certificado con el mismo `solicitud_id`.
