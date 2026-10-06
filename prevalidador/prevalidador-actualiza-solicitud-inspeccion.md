@@ -29,8 +29,8 @@ Actualiza una **solicitud de inspección existente** del prevalidador autenticad
 | Campo | Tipo | Requerido | Validación |
 |---|---|---|---|
 | `solicitud_id` | string | Sí | Debe existir y pertenecer al prevalidador del token |
-| `cliente_id` | string | Condicional | Requerido si no se envía `numero_patente`. Debe existir y ser elegible para el prevalidador del token |
-| `numero_patente` | string | Condicional | Requerido si no se envía `cliente_id`. Exactamente 4 dígitos numéricos. Si se envían ambos, **prioridad a `cliente_id`** y se ignora `numero_patente` (sin búsqueda de patente compartida) |
+| `cliente_id` | string | No | Si se envía, debe existir y ser elegible para el prevalidador del token. Los valores `null`, `"null"`, `"undefined"` y `""` se tratan como no enviados |
+| `numero_patente` | string o number | No | 4 dígitos numéricos. Se aceptan como número y se normalizan: se quitan espacios y se completan ceros a la izquierda (`123` → `"0123"`). Si se envían ambos, **prioridad a `cliente_id`** y se ignora `numero_patente` (sin búsqueda de patente compartida) |
 | `vin` | string | Sí | No vacío |
 | `fabricante` | string | Sí | No vacío |
 | `modelo` | string | Sí | No vacío |
@@ -39,6 +39,8 @@ Actualiza una **solicitud de inspección existente** del prevalidador autenticad
 | `nombre_propietario` | string | Sí | No vacío |
 
 También se aceptan alias en camelCase (`solicitudId`, `clienteId`, `numeroPatente`, `anioModelo`, `nombrePropietario`) por compatibilidad.
+
+**Si no se envía `cliente_id` ni `numero_patente`**, la solicitud **conserva su cliente actual** (no se vuelve a resolver ni a validar la elegibilidad) y solo se actualizan los datos del vehículo y del propietario.
 
 La resolución de cliente por `numero_patente` (incluidos los casos de patente compartida y errores `404`/`403`) es la misma que en [`prevalidadorSolicitudInspeccion`](./prevalidador-solicitud-inspeccion.md).
 
@@ -158,7 +160,7 @@ curl -s -X POST \
 | 403 | `forbidden` | La solicitud no pertenece a este prevalidador |
 | 403 | `cliente-no-elegible` | Cliente(s) sin contrato vigente con este prevalidador |
 | 404 | `not-found` | `solicitud_id` no existe |
-| 404 | `cliente-not-found` | `cliente_id` no existe, o ningún cliente con ese `numero_patente` |
+| 404 | `cliente-not-found` | `cliente_id` no existe, o ningún cliente con ese `numero_patente`. VEC registra en logs los valores y tipos recibidos de `cliente_id` / `numero_patente` para diagnóstico |
 | 405 | `METHOD_NOT_ALLOWED` | No es POST |
 | 500 | `INTERNAL_ERROR` | Fallo interno |
 

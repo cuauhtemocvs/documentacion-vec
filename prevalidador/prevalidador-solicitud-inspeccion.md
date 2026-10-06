@@ -25,8 +25,8 @@ Registra una **nueva solicitud de inspección** en VEC.
 
 | Campo | Tipo | Requerido | Validación |
 |---|---|---|---|
-| `cliente_id` | string | Condicional | Requerido si no se envía `numero_patente`. Debe existir y ser elegible para el prevalidador del token |
-| `numero_patente` | string | Condicional | Requerido si no se envía `cliente_id`. Exactamente 4 dígitos numéricos (`^\d{4}$`) |
+| `cliente_id` | string | Condicional | Requerido si no se envía `numero_patente`. Debe existir y ser elegible para el prevalidador del token. `null`, `"null"`, `"undefined"` y `""` se tratan como no enviados |
+| `numero_patente` | string o number | Condicional | Requerido si no se envía `cliente_id`. 4 dígitos numéricos (`^\d{4}$`) tras normalizar: se quitan espacios y se completan ceros a la izquierda (`123` → `"0123"`) |
 | `vin` | string | Sí | No vacío |
 | `fabricante` | string | Sí | No vacío |
 | `modelo` | string | Sí | No vacío |
