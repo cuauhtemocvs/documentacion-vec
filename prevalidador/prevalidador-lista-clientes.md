@@ -13,6 +13,7 @@ Lista los **clientes** que su prevalidador puede usar al registrar solicitudes d
 | **API** | `prevalidadorListaClientes` |
 | **Método** | `GET` |
 | **URL (prod)** | `https://us-central1-vec-v2.cloudfunctions.net/prevalidadorListaClientes` |
+| **URL (QA)** | `https://us-central1-vec-v2-qa.cloudfunctions.net/prevalidadorListaClientes` |
 | **Auth** | `Authorization: Bearer <idToken>` |
 | **Body** | Ninguno |
 | **CORS** | Cualquier origen (pensado para server-to-server) |
@@ -61,6 +62,8 @@ Un cliente aparece si en **VEC** tiene **al menos un contrato** que cumpla **amb
 
 ## Request
 
+Producción. Para pruebas, use `Host: us-central1-vec-v2-qa.cloudfunctions.net`.
+
 ```http
 GET /prevalidadorListaClientes HTTP/1.1
 Host: us-central1-vec-v2.cloudfunctions.net
@@ -70,6 +73,7 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIs...
 ### Ejemplo curl
 
 ```bash
+# Producción. QA (pruebas): https://us-central1-vec-v2-qa.cloudfunctions.net/prevalidadorListaClientes
 curl -s -X GET \
   "https://us-central1-vec-v2.cloudfunctions.net/prevalidadorListaClientes" \
   -H "Authorization: Bearer ${ID_TOKEN}"
@@ -79,6 +83,7 @@ curl -s -X GET \
 
 ```typescript
 const res = await fetch(
+  // QA (pruebas): https://us-central1-vec-v2-qa.cloudfunctions.net/prevalidadorListaClientes
   "https://us-central1-vec-v2.cloudfunctions.net/prevalidadorListaClientes",
   {
     method: "GET",

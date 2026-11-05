@@ -16,6 +16,7 @@ Registra una **nueva solicitud de inspección** en VEC.
 |---|---|
 | **Método** | `POST` |
 | **URL (prod)** | `https://us-central1-vec-v2.cloudfunctions.net/prevalidadorSolicitudInspeccion` |
+| **URL (QA)** | `https://us-central1-vec-v2-qa.cloudfunctions.net/prevalidadorSolicitudInspeccion` |
 | **Content-Type** | `application/json` |
 | **Auth** | `Authorization: Bearer <idToken>` |
 
@@ -75,6 +76,7 @@ Si se envían **ambos** `cliente_id` y `numero_patente`, **tiene prioridad `clie
 ```
 
 ```bash
+# Producción. QA (pruebas): https://us-central1-vec-v2-qa.cloudfunctions.net/prevalidadorSolicitudInspeccion
 curl -s -X POST \
   "https://us-central1-vec-v2.cloudfunctions.net/prevalidadorSolicitudInspeccion" \
   -H "Content-Type: application/json" \

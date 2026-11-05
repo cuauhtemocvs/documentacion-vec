@@ -19,6 +19,7 @@ Actualiza una **solicitud de inspección existente** del prevalidador autenticad
 |---|---|
 | **Método** | `POST` |
 | **URL (prod)** | `https://us-central1-vec-v2.cloudfunctions.net/prevalidadorActualizaSolicitudInspeccion` |
+| **URL (QA)** | `https://us-central1-vec-v2-qa.cloudfunctions.net/prevalidadorActualizaSolicitudInspeccion` |
 | **Content-Type** | `application/json` |
 | **Auth** | `Authorization: Bearer <idToken>` |
 
@@ -75,6 +76,7 @@ La resolución de cliente por `numero_patente` (incluidos los casos de patente c
 ```
 
 ```bash
+# Producción. QA (pruebas): https://us-central1-vec-v2-qa.cloudfunctions.net/prevalidadorActualizaSolicitudInspeccion
 curl -s -X POST \
   "https://us-central1-vec-v2.cloudfunctions.net/prevalidadorActualizaSolicitudInspeccion" \
   -H "Content-Type: application/json" \

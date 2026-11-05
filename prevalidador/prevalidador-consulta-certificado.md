@@ -74,6 +74,7 @@ No envíe `inspeccion_id` en el request; VEC lo resuelve a partir de `solicitud_
 |---|---|
 | **Métodos** | `GET`, `POST` |
 | **URL (prod)** | `https://us-central1-vec-v2.cloudfunctions.net/prevalidadorConsultaCertificado` |
+| **URL (QA)** | `https://us-central1-vec-v2-qa.cloudfunctions.net/prevalidadorConsultaCertificado` |
 | **Auth** | `Authorization: Bearer <idToken>` |
 
 ---
@@ -90,6 +91,7 @@ Alias aceptados: `solicitudId`.
 ### Ejemplo GET
 
 ```bash
+# Producción. QA (pruebas): https://us-central1-vec-v2-qa.cloudfunctions.net/prevalidadorConsultaCertificado
 curl -s -G \
   "https://us-central1-vec-v2.cloudfunctions.net/prevalidadorConsultaCertificado" \
   --data-urlencode "solicitud_id=SOLICITUD_ID" \
@@ -100,6 +102,7 @@ curl -s -G \
 ### Ejemplo POST
 
 ```bash
+# Producción. QA (pruebas): https://us-central1-vec-v2-qa.cloudfunctions.net/prevalidadorConsultaCertificado
 curl -s -X POST \
   "https://us-central1-vec-v2.cloudfunctions.net/prevalidadorConsultaCertificado" \
   -H "Content-Type: application/json" \

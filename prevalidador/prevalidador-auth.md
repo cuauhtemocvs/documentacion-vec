@@ -48,6 +48,7 @@ sequenceDiagram
 |---|---|
 | **Método** | `POST` |
 | **URL (prod)** | `https://us-central1-vec-v2.cloudfunctions.net/prevalidadorLogin` |
+| **URL (QA)** | `https://us-central1-vec-v2-qa.cloudfunctions.net/prevalidadorLogin` |
 | **Content-Type** | `application/json` |
 
 ### Request
@@ -176,6 +177,7 @@ Content-Type: application/json
 Ejemplo:
 
 ```bash
+# Producción. QA (pruebas): https://us-central1-vec-v2-qa.cloudfunctions.net/prevalidadorListaClientes
 curl -s -X GET \
   "https://us-central1-vec-v2.cloudfunctions.net/prevalidadorListaClientes" \
   -H "Authorization: Bearer ${ID_TOKEN}"

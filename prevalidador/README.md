@@ -4,6 +4,10 @@ Documentación para **equipos de sistemas de prevalidadores** que consumen las A
 
 **Base URL (producción):** `https://us-central1-vec-v2.cloudfunctions.net`
 
+**Base URL (QA, pruebas):** `https://us-central1-vec-v2-qa.cloudfunctions.net`
+
+Cada API usa la misma ruta en ambos entornos. Use QA para pruebas de integración.
+
 ---
 
 ## APIs disponibles

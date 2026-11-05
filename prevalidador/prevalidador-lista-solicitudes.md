@@ -13,6 +13,7 @@ Lista las **solicitudes de inspección** registradas por el prevalidador autenti
 | **API** | `prevalidadorListaSolicitudes` |
 | **Método** | `GET` |
 | **URL (prod)** | `https://us-central1-vec-v2.cloudfunctions.net/prevalidadorListaSolicitudes` |
+| **URL (QA)** | `https://us-central1-vec-v2-qa.cloudfunctions.net/prevalidadorListaSolicitudes` |
 | **Auth** | `Authorization: Bearer <idToken>` |
 | **Body** | Ninguno |
 | **CORS** | Cualquier origen (pensado para server-to-server) |
@@ -34,6 +35,8 @@ También se aceptan alias `fecha_ini` y `fecha_fin`.
 
 ## Request
 
+Producción. Para pruebas, use `Host: us-central1-vec-v2-qa.cloudfunctions.net`.
+
 ```http
 GET /prevalidadorListaSolicitudes?orden=DESC&fechaIni=2025-05-08&fechaFin=2025-06-08 HTTP/1.1
 Host: us-central1-vec-v2.cloudfunctions.net
@@ -43,6 +46,7 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiIs...
 ### Ejemplo curl
 
 ```bash
+# Producción. QA (pruebas): https://us-central1-vec-v2-qa.cloudfunctions.net/prevalidadorListaSolicitudes
 curl -s -G \
   "https://us-central1-vec-v2.cloudfunctions.net/prevalidadorListaSolicitudes" \
   -H "Authorization: Bearer ${ID_TOKEN}" \
